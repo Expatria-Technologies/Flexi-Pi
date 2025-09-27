@@ -6,6 +6,7 @@ Both the Raspberry Pi 5 and Raspberry Pi 4 are currently supported. Performance 
 
 **To get started:**
 * Download the release for your specific Pi board (Pi 4 or Pi 5)
+  https://github.com/Expatria-Technologies/Flexi-Pi/releases
 * Extract the image archive
 * Flash the image to an an 8GB or larger SD card using dd, balenaEtcher, or the tool of your choice. The filesystem will be automatically resized on first boot to fill the entirety of the SD card.
 * Install the Pi onto the Flexi-HAL headers and insert the SD card into the Pi.
