@@ -56,7 +56,66 @@ Jumpers need to be in place in the marked locations on the Flexi-HAL for the Pi 
 These are shipped in place by default from the Expatria shop, but if they have been moved or removed they will need to be replaced. 
 
 To provide sufficient clearance for a cooler on a Pi 5, a 40-pin female header can be used as a riser between the Flexi-HAL and the Pi. 
+
  
+## Getting started with LinuxCNC:
+
+#### For SPI with a Pi connected directly to the Flexi-HAL: 
+
+A git checkout of the Remora-flexi repository is present in the home directory. Update it before getting started to make sure you have the most recent version. Run 'git pull' from within the /home/expatria/remora-flexi-hal directory to update.
+
+Connect 24V power to your Flexi-HAL and a suitable USB-C to your Raspberry Pi. Do not connect anything to the USB-C port on the Flexi-HAL while flashing Remora over the GPIO header. Doing so may prevent the UART bootloader from functioning. 
+
+Flash your Flexi with the current build of Remora by running the following command in a terminal:
+
+`~/flash_flexi ~/remora-flexi-hal/Firmware/FirmwareBin/FLEXIHAL/firmware.bin`
+
+The output should look similar to the following:
+```
+Entering bootloader...
+stm32flash 0.7
+
+http://stm32flash.sourceforge.net/
+
+Using Parser : Raw BINARY
+Size         : 150776
+Interface serial_posix: 115200 8E1
+Version      : 0x31
+Option 1     : 0x00
+Option 2     : 0x00
+Device ID    : 0x0421 (STM32F446xx)
+- RAM        : Up to 128KiB  (12288b reserved by bootloader)
+- Flash      : Up to 512KiB (size first sector: 1x16384)
+- Option RAM : 16b
+- System RAM : 30KiB
+Write to memory
+Erasing memory
+Wrote address 0x08024cf8 (100.00%) Done.
+
+Resetting board...
+Done!
+```
+If there is a `Failed to init device.` response, there has been an error flashing the firmware which will need to be resolved before proceeding. 
+
+A base PrintNC configuration is provided in the LinuxCNC config directory at `/home/expatria/linuxcnc/configs/flexi-hal`. **Edit the INI with your machine configuration prior to attempting motion.** This base configuration includes QtDragon_hd and vfdmod; vfdmod is configured for the Durapulse GS10 VFD, but the configuration can be changed fairly easily to suit a Modbus VFD. A sample HAL configuration for the HY VFD is included in the reference config, commented out. There are comments in the HAL file to detail what to uncomment/comment out. 
+
+#### For Ethernet via uFlexinet: 
+
+The `remora-eth` component is pre-installed in this image. Also included is a reference configuration for use with the uFlexiNet in the LinuxCNC config directory at `/home/expatria/linuxcnc/configs/uFlexiNet`. You will need upload your configuration file to the FlexiHAL using the `upload_config.py` script that should be in your configuration folder:
+
+`python3 upload_config.py FlexiHAL-config.txt`
+
+To use the RS485 interface on the FlexiHAL via the uFlexiNet you can set up a virtual serial port and use socat to bridge between userspace Modbus components and Remora. If the RS485 component is included in the board config txt, it will listen on port 27183 for UDP packets and forward them to the RS485 port: 
+
+`socat pty, link=/tmp/virtualcom0, raw udp:10.10.10.10:27183 &`
+
+More information on the Ethernet implmentation can be found in the README in the repository: https://github.com/Expatria-Technologies/Remora-STM32F4xx-W5500
+
+#### Autostarting LinuxCNC on boot:
+
+If you'd like to autostart LinuxCNC on boot after configuring your machine, add `linuxcnc -l` to 'Application Autostart' in the 'Session and Startup' menu to automatically load the configuration you last selected in the LinuxCNC selection window. 
+
+
 
 ## Support
 
