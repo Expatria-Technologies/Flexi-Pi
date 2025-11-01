@@ -135,7 +135,9 @@ git clone https://github.com/scottalford75/Remora.git Remora-upstream
 cd Remora-upstream/LinuxCNC/Components/Remora-spi
 halcompile --install remora-spi.c
 cd /tmp/Remora-upstream/LinuxCNC/Components/Remora-eth
-halcompile --install remora-eth-3.0.c 
+halcompile --install remora-eth-3.0.c
+cd /tmp/Remora-upstream/LinuxCNC/Components/PRUencoder
+halcompile --install PRUencoder.c
 
 echo 'Copying ngcgui library to config dir'
 cp -av /usr/share/linuxcnc/ncfiles/ngcgui_lib /home/expatria/linuxcnc/
