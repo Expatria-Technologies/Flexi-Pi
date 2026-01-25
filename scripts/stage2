@@ -415,6 +415,7 @@ if [[ "$DISTRO" == "ubuntu" ]]; then rm -f /etc/resolv.conf; fi
 echo ""
 echo "Finalizing ..."
 echo ""
-sleep .75
+sync
+sleep 1
 
 umount /proc /sys
