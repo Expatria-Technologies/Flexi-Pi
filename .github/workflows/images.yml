@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         board: [bcm2712, bcm2711]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     steps:
     - name: Install toolchain
       run: |
@@ -24,7 +24,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: make ccompile
+      run: make ncompile
 
     - name: Build kernel
       run: make commit board=${{ matrix.board }}
