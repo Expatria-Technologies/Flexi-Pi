@@ -97,15 +97,7 @@ echo 'Cloning the remora-flexi hal repo and building flexi components'
 cd /home/expatria
 git clone https://github.com/Expatria-Technologies/remora-flexi-hal.git remora-flexi-hal
 cd remora-flexi-hal/LinuxCNC/Components/Flexi/
-#halcompile --install flexi.c
-tee Makefile <<EOF
-   obj-m += flexi.o
-   include /usr/share/linuxcnc/Makefile.modinc
-   EXTRA_CFLAGS += -I/home/expatria/remora-flexi-hal/LinuxCNC/Components/Flexi/
-   EXTRA_CFLAGS += -I/home/expatria/remora-flexi-hal/LinuxCNC/Components/Flexi/
-   EXTRA_CFLAGS += -Wno-incompatible-pointer-types
-EOF
-make modules install
+halcompile --install flexi.c
 mkdir /home/expatria/linuxcnc
 mkdir /home/expatria/linuxcnc/configs
 mkdir /home/expatria/linuxcnc/nc_files
