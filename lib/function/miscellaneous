@@ -18,17 +18,9 @@ raspberrypi_sys_mods (){
 echo ""
 echo "Installing raspi-sys-mods ..."
 git clone https://github.com/RPi-Distro/raspberrypi-sys-mods.git
-if [[ "$DISTRO" == "devuan" ]]; then
-	mv -f raspberrypi-sys-mods-control.patch raspberrypi-sys-mods/
-	cd raspberrypi-sys-mods
-	git checkout -q 46ae4208397d662fc4f5d0cc9acc85395f852af1
-	patch -p1 < raspberrypi-sys-mods-control.patch
-	rm -f raspberrypi-sys-mods-control.patch
-else
-	rm -f raspberrypi-sys-mods-control.patch
-	cd raspberrypi-sys-mods
-	git checkout -q 46ae4208397d662fc4f5d0cc9acc85395f852af1
-fi
+rm -f raspberrypi-sys-mods-control.patch
+cd raspberrypi-sys-mods
+git checkout -q 46ae4208397d662fc4f5d0cc9acc85395f852af1
 dpkg-buildpackage -us -uc
 cd ~
 dpkg -i raspberrypi-sys-mods*.deb
@@ -53,43 +45,60 @@ EEPROM_VERSION=$(curl --silent -L ${CHANGELOG} | awk '{if (NR==10) {print substr
 if [[ `wget -S --spider ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
 	download_eeprom
 else
-	EEPROM_VERSION="20.1"
+	EEPROM_VERSION="28.8"
 	download_eeprom
 fi
 }
 
 download_eeprom (){
-wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}-1.debian.tar.xz
-wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz
+#wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}-1.debian.tar.xz
+#wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz
+wget -cq --show-progress ${ERURL}rpi-eeprom-images_${EEPROM_VERSION}-1_all.deb
+wget -cq --show-progress ${ERURL}rpi-eeprom_${EEPROM_VERSION}-1_all.deb
 }
 
 eeprom_support (){
 ERURL="https://archive.raspberrypi.org/debian/pool/main/r/rpi-eeprom/"
-CHANGELOG="https://raw.githubusercontent.com/raspberrypi/rpi-eeprom/debian/bookworm/debian/changelog"
+CHANGELOG="https://raw.githubusercontent.com/raspberrypi/rpi-eeprom/pios/trixie/debian/changelog"
 echo ""
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+#export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 echo "Installing rpi-eeprom ..."
-apt install help2man rsync pciutils -y
+#apt install help2man rsync pciutils -y
 mkdir -p ~/eeprom
-mv -f rpi-eeprom-update.patch /root/eeprom/
-mv -f rpi-eeprom-control /root/eeprom/
+cd ~/eeprom
+#mv -f rpi-eeprom-update.patch /root/eeprom/
+#mv -f rpi-eeprom-control /root/eeprom/
 cd ~/eeprom
 find_eeprom
-tar xf rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz
-tar xf rpi-eeprom_${EEPROM_VERSION}-1.debian.tar.xz
-rm -f rpi-eeprom_${EEPROM_VERSION}-1.debian.tar.xz
-mkdir -p debian/patches
-mv rpi-eeprom-update.patch debian/patches/rpi-eeprom-update.patch 
-echo rpi-eeprom-update.patch >> debian/patches/series
-rm -f debian/control; mv -f rpi-eeprom-control debian/control
-echo "12" > debian/compat
-mv -f debian rpi-eeprom-${EEPROM_VERSION}/
-cd rpi-eeprom-${EEPROM_VERSION}
-rm -f rpi-eeprom-control.patch
-dpkg-buildpackage -us -nc -uc
-cd ..
-dpkg -i *.deb
-cd ..
+#tar xf rpi-eeprom_${EEPROM_VERSION}.orig.tar.gz
+#tar xf rpi-eeprom_${EEPROM_VERSION}-1.debian.tar.xz
+#rm -f rpi-eeprom_${EEPROM_VERSION}-1.debian.tar.xz
+#mkdir -p debian/patches
+#mv rpi-eeprom-update.patch debian/patches/rpi-eeprom-update.patch 
+#echo rpi-eeprom-update.patch >> debian/patches/series
+#rm -f debian/control; mv -f rpi-eeprom-control debian/control
+#echo "12" > debian/compat
+#mv -f debian rpi-eeprom-${EEPROM_VERSION}/
+#cd rpi-eeprom-${EEPROM_VERSION}
+#rm -f rpi-eeprom-control.patch
+#dpkg-buildpackage -us -nc -uc
+#cd ..
+#dpkg -i *.deb
+#cd ..
+CTRL=`ar t rpi-eeprom_${EEPROM_VERSION}-1_all.deb | grep "control"`
+if [[ -f "rpi-eeprom_${EEPROM_VERSION}-1_all.deb" ]]; then
+	apt install binutils flashrom pciutils python3 python3-pycryptodome -y
+	ar x rpi-eeprom_${EEPROM_VERSION}-1_all.deb; rm -f {data.tar.xz,debian-binary}
+	mkdir tmp; mv ${CTRL} tmp/; cd tmp
+	tar xf ${CTRL}; rm ${CTRL}
+	sed -i "s/^Depends.*/Depends: python3, binutils, pciutils, python3-pycryptodome/" control
+	tar -cJf ${CTRL} *
+	mv ${CTRL} ../; cd ..
+	ar r rpi-eeprom_${EEPROM_VERSION}-1_all.deb ${CTRL}
+	rm -fdr ${CTRL} tmp
+	dpkg -i rpi-eeprom-images_${EEPROM_VERSION}-1_all.deb rpi-eeprom_${EEPROM_VERSION}-1_all.deb
+	cd ..
+fi
 rm -fdr eeprom
 }
 
@@ -232,7 +241,7 @@ fi
 apt_preferences (){
 CAP_DISTRO=`echo "${DISTRO}" | sed -e "s/\b\(.\)/\u\1/g"`
 echo
-echo Blacking listing packages.
+echo Blacklisting packages.
 tee /etc/apt/preferences <<EOF
 Package: rpi-eeprom linux-firmware linux-firmware-raspi2 pi-bluetooth raspberrypi-sys-mods
 Pin: release o=${CAP_DISTRO}

@@ -12,7 +12,7 @@ CCACHE="1"
 
 ### DISTRIBUTION
 DISTRO="debian"
-DISTRO_VERSION="bookworm"
+DISTRO_VERSION="trixie"
 NETWORKMANAGER="1"
 
 ### CUSTOM KERNEL - Comment out the one not required

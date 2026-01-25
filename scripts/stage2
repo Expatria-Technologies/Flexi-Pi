@@ -271,6 +271,15 @@ else
 	rm -f /root/systemd-binfmt-fixups
 fi
 
+# debian trixie fixups 
+if [[ "$ARCH" == "arm" && "$DISTRO_VERSION" =~ ^(excalibur|trixie)$ ]]; then
+	mv -f /usr/share/initramfs-tools/hooks/kmod /etc/opt/kmod.orig
+	mv -f /root/kmod /usr/share/initramfs-tools/hooks/
+	chmod +x /usr/share/initramfs-tools/hooks/kmod
+else
+	rm -f /root/kmod
+fi
+
 # rpi firmware
 extra_firmware
 
@@ -337,8 +346,8 @@ cd ~
 dpkg -i pi-bluetooth_*.deb
 rm -fdR pi-bluetooth*
 
-#  userland
-rpi_userland
+#  userland - Deprecated, not needed on Trixie. 
+#rpi_userland
 
 # eeprom
 if [[ "$BOARD_EXT" =~ ^(rpi-2+3|rpi-3|rpi-4|rpi-5)$ ]]; then eeprom_support; fi

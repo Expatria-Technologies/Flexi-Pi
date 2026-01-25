@@ -28,6 +28,18 @@ sudo debconf-apt-progress -- apt install -y \
 	python3-pyelftools curl mtools gcc-11-plugin-dev gcc-12-plugin-dev ccache
 }
 
+trixie-ccompile (){
+sudo debconf-apt-progress -- apt install -y \
+	build-essential bison bc git dialog patch dosfstools zip unzip parted \
+	debootstrap qemu-user-static rsync kmod cpio flex libssl-dev libncurses5-dev \
+	device-tree-compiler libfdt-dev python3-dev swig fakeroot mmdebstrap fdisk \
+	lzop lz4 aria2 pv distro-info-data lsb-release libelf-dev kpartx zstd gcc \
+	crossbuild-essential-arm64 crossbuild-essential-armhf crossbuild-essential-armel \
+	gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf gcc-arm-linux-gnueabi colorized-logs \
+	gdisk jq wget btrfs-progs xfsprogs curl libgnutls28-dev uuu uuid-dev mtools \
+	gcc-14-plugin-dev figlet clang ccache xz-utils
+}
+
 jammy-ccompile (){
 sudo debconf-apt-progress -- apt install -y \
 	build-essential bison bc git dialog patch fdisk distro-info-data mmdebstrap \
@@ -68,7 +80,7 @@ if [[ "$HOST_ARCH" == "aarch64" ]]; then
 	exit 1
 fi
 
-if [[ "$HOST_CODENAME" =~ ^(bullseye|bookworm|jammy|noble)$ ]]; then
+if [[ "$HOST_CODENAME" =~ ^(bullseye|bookworm|jammy|noble|trixie)$ ]]; then
 	echo ""
 	${HOST_CODENAME}-ccompile
 else

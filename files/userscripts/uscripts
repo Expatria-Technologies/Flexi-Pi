@@ -19,56 +19,59 @@ run_function2 (){
 
 # Get the Linuxcnc Debs
 
-echo "Installing linuxcnc repository" 
+echo "Installing linuxcnc repository keys" 
 mkdir -p /tmp/linuxcnc/
 cd /tmp/linuxcnc/
 gpg --homedir /tmp/linuxcnc/ --keyserver hkp://keyserver.ubuntu.com --recv-key 3cb9fd148f374fef
-gpg --homedir /tmp/linuxcnc/ --export 'EMC Archive Signing Key' | tee /usr/share/keyrings/linuxcnc.gpg > /dev/null
+gpg --homedir /tmp/linuxcnc/ --export 'EMC Archive Signing Key' | tee /usr/share/keyrings/linuxcnc-old.gpg > /dev/null
+gpg --homedir /tmp/linuxcnc/ --keyserver hkp://keyserver.ubuntu.com --recv-key e43b5a8e78cc2927
+gpg --homedir /tmp/linuxcnc/ --export 'LinuxCNC Archive Signing Key' | tee /usr/share/keyrings/linuxcnc.gpg > /dev/null
+
 echo 'deleting temp files'
 
 # Install companion repositories. NOTE: QTPYVCP does not support the raspberry pi.
 
-echo "Install ethercat repository"
+echo "Install ethercat repository key"
 mkdir -p /usr/local/share/keyrings/
 wget -O- https://build.opensuse.org/projects/science:EtherLab/signing_keys/download?kind=gpg | gpg --dearmor | dd of=/etc/apt/trusted.gpg.d/science_EtherLab.gpg
 tee -a /etc/apt/sources.list.d/ighvh.sources > /dev/null <<EOT
 Types: deb
 Signed-By: /etc/apt/trusted.gpg.d/science_EtherLab.gpg
 Suites: ./
-URIs: http://download.opensuse.org/repositories/science:/EtherLab/Debian_12/
+URIs: http://download.opensuse.org/repositories/science:/EtherLab/Debian_13/
 EOT
 
 echo 'Updating apt repository list'
-echo deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/linuxcnc.gpg] https://www.linuxcnc.org/ bookworm base 2.9-uspace | tee /etc/apt/sources.list.d/linuxcnc.list > /dev/null
-echo deb-src [arch=amd64,arm64 signed-by=/usr/share/keyrings/linuxcnc.gpg] https://www.linuxcnc.org/ bookworm base 2.9-uspace | tee -a /etc/apt/sources.list.d/linuxcnc.list > /dev/null
+echo deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/linuxcnc.gpg] https://www.linuxcnc.org/ trixie base 2.9-uspace | tee /etc/apt/sources.list.d/linuxcnc.list > /dev/null
+echo deb-src [arch=amd64,arm64 signed-by=/usr/share/keyrings/linuxcnc.gpg] https://www.linuxcnc.org/ trixie base 2.9-uspace | tee -a /etc/apt/sources.list.d/linuxcnc.list > /dev/null
 
 tee -a /etc/apt/preferences.d/99linuxcnc-uspace.pref > /dev/null <<EOT
 package: linuxcnc-uspace
-pin: release o=https://www.linuxcnc.org/ bookworm base 2.9-uspace 
+pin: release o=https://www.linuxcnc.org/ trixie base 2.9-uspace 
 Pin-Priority: 500
 
 package: linuxcnc-uspace-dev
-pin: release o=https://www.linuxcnc.org/ bookworm base 2.9-uspace 
+pin: release o=https://www.linuxcnc.org/ trixie base 2.9-uspace 
 Pin-Priority: 500
 
 package: linuxcnc-uspace-doc-en
-pin: release o=https://www.linuxcnc.org/ bookworm base 2.9-uspace
+pin: release o=https://www.linuxcnc.org/ trixie base 2.9-uspace
 Pin-Priority: 500
 
 package: linuxcnc-uspace-doc-de
-pin: release o=https://www.linuxcnc.org/ bookworm base 2.9-uspace
+pin: release o=https://www.linuxcnc.org/ trixie base 2.9-uspace
 Pin-Priority: 500
 
 package: linuxcnc-uspace-doc-es
-pin: release o=https://www.linuxcnc.org/ bookworm base 2.9-uspace
+pin: release o=https://www.linuxcnc.org/ trixie base 2.9-uspace
 Pin-Priority: 500
 
 package: linuxcnc-uspace-doc-fr
-pin: release o=https://www.linuxcnc.org/ bookworm base 2.9-uspace 2.9-rt
+pin: release o=https://www.linuxcnc.org/ trixie base 2.9-uspace 2.9-rt
 Pin-Priority: 500
 
 package: linuxcnc-uspace-doc-zh-cn
-pin: release o=https://www.linuxcnc.org/ bookworm base 2.9-uspace 2.9-rt
+pin: release o=https://www.linuxcnc.org/ trixie base 2.9-uspace 2.9-rt
 Pin-Priority: 500
 EOT
 
@@ -90,11 +93,19 @@ qmake ../vfdmod.pro
 make
 cp vfdmod /usr/bin
 
-echo 'Cloning the remora-flexi hal repo and building flexi component'
+echo 'Cloning the remora-flexi hal repo and building flexi components'
 cd /home/expatria
 git clone https://github.com/Expatria-Technologies/remora-flexi-hal.git remora-flexi-hal
 cd remora-flexi-hal/LinuxCNC/Components/Flexi/
-halcompile --install flexi.c
+#halcompile --install flexi.c
+tee Makefile <<EOF
+   obj-m += flexi.o
+   include /usr/share/linuxcnc/Makefile.modinc
+   EXTRA_CFLAGS += -I/home/expatria/remora-flexi-hal/LinuxCNC/Components/Flexi/
+   EXTRA_CFLAGS += -I/home/expatria/remora-flexi-hal/LinuxCNC/Components/Flexi/
+   EXTRA_CFLAGS += -Wno-incompatible-pointer-types
+EOF
+make modules install
 mkdir /home/expatria/linuxcnc
 mkdir /home/expatria/linuxcnc/configs
 mkdir /home/expatria/linuxcnc/nc_files
@@ -108,6 +119,8 @@ elif [ $BOARD == "bcm2711" ]; then
    echo "Reconfiguring vfdmod serial port for Pi 4"
    sed -i 's/AMA2/AMA3/' /home/expatria/linuxcnc/configs/flexi-hal/vfdmod.ini
 fi
+cd /home/expatria/remora-flexi-hal/LinuxCNC/Components/PRUencoder
+halcompile --install PRUencoder.c
 
 
 echo 'Cloning the Remora repo and building remora-eth component for use with uFlexiNet'
@@ -132,12 +145,18 @@ fi
 echo 'Cloning the upstream Remora repo and installing the default remora-spi and remora-eth-3.0 components for non-Expatria boards'
 cd /tmp
 git clone https://github.com/scottalford75/Remora.git Remora-upstream
-cd Remora-upstream/LinuxCNC/Components/Remora-spi
-halcompile --install remora-spi.c
+cd /tmp/Remora-upstream/LinuxCNC/Components/Remora-spi
+#halcompile --install remora-spi.c
+tee Makefile <<EOF
+   obj-m += remora-spi.o
+   include /usr/share/linuxcnc/Makefile.modinc
+   EXTRA_CFLAGS += -I/tmp/Remora-upstream/LinuxCNC/Components/Remora-spi
+   EXTRA_CFLAGS += -I/tmp/Remora-upstream/LinuxCNC/Components/Remora-spi
+   EXTRA_CFLAGS += -Wno-incompatible-pointer-types
+EOF
+make modules install
 cd /tmp/Remora-upstream/LinuxCNC/Components/Remora-eth
 halcompile --install remora-eth-3.0.c
-cd /tmp/Remora-upstream/LinuxCNC/Components/PRUencoder
-halcompile --install PRUencoder.c
 
 echo 'Copying ngcgui library to config dir'
 cp -av /usr/share/linuxcnc/ncfiles/ngcgui_lib /home/expatria/linuxcnc/
