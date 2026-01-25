@@ -416,6 +416,6 @@ echo ""
 echo "Finalizing ..."
 echo ""
 sync
-sleep 1
+sleep 10
 
 umount /proc /sys
