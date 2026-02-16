@@ -244,7 +244,8 @@ echo Done.
 # fin and compress
 finish_image (){
 IMAGE_TIME="$(date +%T | sed 's/://g' | sed 's/..$//')"
-IMAGE_FIN_NAME="${BOARD_EXT}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img"
+#IMAGE_FIN_NAME="${BOARD_EXT}-${DISTRO}-${DISTRO_VERSION}-${INSTALLED_KERNEL}-${ARCH_EXT}-${FSTYPE}-${IMAGE_DATE}-${IMAGE_TIME}.img"
+IMAGE_FIN_NAME="Flexi-Pi-${BOARD_EXT}-${IMAGE_DATE}.img"
 if [[ -f "${IMAGE_FILE_NAME}" ]]; then
 	mv -f ${IMAGE_FILE_NAME} ${IMAGE_FIN_NAME}
 else
