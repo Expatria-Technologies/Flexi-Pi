@@ -38,7 +38,7 @@ jobs:
     - name: Archive image artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: Test Image board=${{ matrix.board }}
+        name: Flexi-Pi board=${{ matrix.board }}
         path: |
             *.img.xz
         #already compressed, no need to attempt to recompress
